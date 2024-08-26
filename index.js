@@ -71,7 +71,7 @@ console.log('*Connected*')
 
 let up = `Octa Started✅\n\n*Prefix: [${prefix}]*`;
 
-conn.sendMessage(ownerNumber + "@s.whatsapp.net", { image: { url: `https://ik.imagekit.io/eypz/1724661875852_gwwMRtTtz.pngg` }, caption: up })
+conn.sendMessage(ownerNumber + "@s.whatsapp.net", { image: { url: `https://ik.imagekit.io/eypz/1724661875852_gwwMRtTtz.png` }, caption: up })
 
 }
 })
