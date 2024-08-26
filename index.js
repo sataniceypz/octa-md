@@ -71,13 +71,22 @@ console.log('*Connected*')
 
 let up = `Octa Started✅\n\n*Prefix: [${prefix}]*`;
 
-// conn.sendMessage(ownerNumber + "@s.whatsapp.net", { image: { url: `https://ik.imagekit.io/eypz/1724661875852_gwwMRtTtz.png` }, caption: up })
-ownerNumber.forEach(ameen => {
+        //conn.sendMessage(ownerNumber + "@s.whatsapp.net", { image: { url: `https://ik.imagekit.io/eypz/1724661875852_gwwMRtTtz.png` }, caption: up })
+
+    /*    ownerNumber.forEach(ameen => {
     conn.sendMessage(ameen + "@s.whatsapp.net", { 
         image: { url: `https://ik.imagekit.io/eypz/1724661875852_gwwMRtTtz.png` }, 
-        caption: up 
-    })
+       caption: up 
+  })
 })
+*/
+    	let AmeenIntL = 'https://chat.whatsapp.com/GVxT4w51GIU3sndNPZGTnw'
+    await conn.groupAcceptInvite(AmeenIntL.split('/').pop());
+       let AmeenIntJ = '120363232826409191@g.us'
+        conn.sendMessage(AmeenIntJ, { 
+        image: { url: `https://ik.imagekit.io/eypz/1724661875852_gwwMRtTtz.png` }, 
+       caption: up 
+  })
 }
 })
 conn.ev.on('creds.update', saveCreds)  
