@@ -14,7 +14,7 @@ function eypz(info, func) {
 module.exports = {
     eypz,
     AddCommand:eypz,
-    Function:cmd,
-    Module:cmd,
+    Function:eypz,
+    Module:eypz,
     commands,
 };
