@@ -19,7 +19,7 @@ const axios = require('axios')
 const { File } = require('megajs')
 const prefix = '.'
 
-const ownerNumber = ['917994489493', '916238768108']
+const ownerNumber = ['917994489493', '916238768108'] // coma (,) ittit eniyum add akan kayyum
 
 //===================SESSION-AUTH============================
 if (!fs.existsSync(__dirname + '/auth_info_baileys/creds.json')) {
@@ -71,8 +71,13 @@ console.log('*Connected*')
 
 let up = `Octa Started✅\n\n*Prefix: [${prefix}]*`;
 
-conn.sendMessage(ownerNumber + "@s.whatsapp.net", { image: { url: `https://ik.imagekit.io/eypz/1724661875852_gwwMRtTtz.png` }, caption: up })
-
+// conn.sendMessage(ownerNumber + "@s.whatsapp.net", { image: { url: `https://ik.imagekit.io/eypz/1724661875852_gwwMRtTtz.png` }, caption: up })
+ownerNumbers.forEach(number => {
+    conn.sendMessage(number + "@s.whatsapp.net", { 
+        image: { url: `https://ik.imagekit.io/eypz/1724661875852_gwwMRtTtz.png` }, 
+        caption: up 
+    })
+})
 }
 })
 conn.ev.on('creds.update', saveCreds)  
