@@ -1,4 +1,4 @@
-const { commands, eypz } = require('../lib/'); 
+const { commands, eypz } = require('../command'); 
 
 eypz({
     command: 'ping',
