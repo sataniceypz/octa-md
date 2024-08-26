@@ -20,7 +20,7 @@ async(conn, mek, m, { reply, quoted, args }) => {
         const filePath = path.join(__dirname, '../plugins', `${AmeenXnt}.js`)
 
  
-        if (!quoted || !quoted.text) return reply('_Replay To A Js Code For Octa Bot Plugin🙄._')
+        if (!quoted) return reply('_Replay To A Js Code For Octa Bot Plugin🙄._')
 
 
         fs.writeFileSync(filePath, quoted.text, 'utf8')
