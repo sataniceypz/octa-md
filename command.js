@@ -1,6 +1,6 @@
 var commands = [];
 
-function cmd(info, func) {
+function eypz(info, func) {
     var data = info;
     data.function = func;
     if (!data.dontAddCommandList) data.dontAddCommandList = false;
