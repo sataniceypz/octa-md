@@ -1,2 +1,4 @@
-# ikuze
-whatsapp bot
+# Octa
+Open Source whatsapp bot
+
+get session https://octa-pair.onrender.com
