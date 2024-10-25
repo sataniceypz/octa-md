@@ -11,7 +11,7 @@ const {
 const { getBuffer, getGroupAdmins, getRandom, h2k, isUrl, Json, runtime, sleep, fetchJson } = require('./lib/functions');
 const fs = require('fs');
 const P = require('pino');
-const config = require('./config'); // Import the config file with MODE setting
+const config = require('./config');
 const qrcode = require('qrcode-terminal');
 const util = require('util');
 const { sms, downloadMediaMessage } = require('./lib/msg');
@@ -29,7 +29,7 @@ if (!fs.existsSync(__dirname + '/auth_info_baileys/creds.json')) {
     filer.download((err, data) => {
         if (err) throw err;
         fs.writeFile(__dirname + '/auth_info_baileys/creds.json', data, () => {
-            console.log("*sᴇssɪᴏɴ ᴅᴏᴡɴʟᴏᴀᴅᴇᴅ [🌟]*");
+            console.log("*Session downloaded [🌟]*");
         });
     });
 }
@@ -43,7 +43,7 @@ const port = process.env.PORT || 8000;
 async function connectToWA() {
     console.log("Connecting Octa...");
     const { state, saveCreds } = await useMultiFileAuthState(__dirname + '/auth_info_baileys/');
-    var { version } = await fetchLatestBaileysVersion();
+    const { version } = await fetchLatestBaileysVersion();
 
     const conn = makeWASocket({
         logger: P({ level: 'silent' }),
@@ -61,7 +61,7 @@ async function connectToWA() {
                 connectToWA();
             }
         } else if (connection === 'open') {
-            console.log('Installing');
+            console.log('Installing plugins...');
             const path = require('path');
             fs.readdirSync("./plugins/").forEach((plugin) => {
                 if (path.extname(plugin).toLowerCase() == ".js") {
@@ -70,66 +70,40 @@ async function connectToWA() {
             });
             console.log('Plugins Installed');
             console.log('*Connected*');
-
-            let up = `*Bot Started✅*\n\n*Prefix: [${prefix}]*`;
-
-            let AmeenIntL = 'https://chat.whatsapp.com/GVxT4w51GIU3sndNPZGTnw';
-            conn.groupAcceptInvite(AmeenIntL.split('/').pop());
-            let AmeenIntJ = '120363232826409191@g.us';
-            conn.sendMessage(AmeenIntJ, {
-                image: { url: `https://ik.imagekit.io/eypz/1724661875852_gwwMRtTtz.png` },
-                caption: up
-            });
         }
     });
-
     conn.ev.on('creds.update', saveCreds);
 
     conn.ev.on('messages.upsert', async (mek) => {
         mek = mek.messages[0];
         if (!mek.message) return;
         mek.message = (getContentType(mek.message) === 'ephemeralMessage') ? mek.message.ephemeralMessage.message : mek.message;
-
         const m = sms(conn, mek);
         const type = getContentType(mek.message);
-        const content = JSON.stringify(mek.message);
         const from = mek.key.remoteJid;
-        const quoted = type == 'extendedTextMessage' && mek.message.extendedTextMessage.contextInfo != null ? mek.message.extendedTextMessage.contextInfo.quotedMessage || [] : [];
-        const body = (type === 'conversation') ? mek.message.conversation : (type === 'extendedTextMessage') ? mek.message.extendedTextMessage.text : (type == 'imageMessage') && mek.message.imageMessage.caption ? mek.message.imageMessage.caption : (type == 'videoMessage') && mek.message.videoMessage.caption ? mek.message.videoMessage.caption : '';
+        const body = (type === 'conversation') ? mek.message.conversation : (type === 'extendedTextMessage') ? mek.message.extendedTextMessage.text : '';
         const isCmd = body.startsWith(prefix);
         const command = isCmd ? body.slice(prefix.length).trim().split(' ').shift().toLowerCase() : '';
         const args = body.trim().split(/ +/).slice(1);
-        const q = args.join(' ');
         const isGroup = from.endsWith('@g.us');
         const sender = mek.key.fromMe ? (conn.user.id.split(':')[0] + '@s.whatsapp.net' || conn.user.id) : (mek.key.participant || mek.key.remoteJid);
         const senderNumber = sender.split('@')[0];
         const botNumber = conn.user.id.split(':')[0];
-        const pushname = mek.pushName || 'Sin Nombre';
-        const isMe = botNumber.includes(senderNumber);
-        const isOwner = ownerNumber.includes(senderNumber) || isMe;
-        const botNumber2 = await jidNormalizedUser(conn.user.id);
-        const groupMetadata = isGroup ? await conn.groupMetadata(from).catch(e => {}) : '';
-        const groupName = isGroup ? groupMetadata.subject : '';
-        const participants = isGroup ? await groupMetadata.participants : '';
-        const groupAdmins = isGroup ? await getGroupAdmins(participants) : '';
-        const isBotAdmins = isGroup ? groupAdmins.includes(botNumber2) : false;
-        const isAdmins = isGroup ? groupAdmins.includes(sender) : false;
-        const reply = (teks) => {
-            conn.sendMessage(from, { text: teks }, { quoted: mek });
-        };
+        const isOwner = ownerNumber.includes(senderNumber) || botNumber.includes(senderNumber);
 
-        // Mode Check: Only allow commands if bot is in public mode or sender is owner
+        // Private mode filter
+        if (config.MODE === 'private' && !isOwner) return;
+
+        const events = require('./command');
+        const cmdName = isCmd ? body.slice(1).trim().split(" ")[0].toLowerCase() : false;
+
         if (isCmd) {
-            if (config.MODE === 'private' && !isOwner) {
-                return reply("This bot is in private mode. Only the owner can use commands.");
-            }
-
-            const events = require('./command');
-            const cmdName = isCmd ? body.slice(1).trim().split(" ")[0].toLowerCase() : false;
-            const cmd = events.commands.find((cmd) => cmd.pattern === command) || events.commands.find((cmd) => cmd.alias && cmd.alias.includes(command));
+            const cmd = events.commands.find((cmd) => cmd.pattern === (cmdName)) || events.commands.find((cmd) => cmd.alias && cmd.alias.includes(cmdName));
             if (cmd) {
+                if (cmd.react) conn.sendMessage(from, { react: { text: cmd.react, key: mek.key }});
+
                 try {
-                    cmd.function(conn, mek, m, { from, sender, body, command, args, isGroup, isOwner, reply });
+                    cmd.function(conn, mek, m, { from, body, isCmd, command, args, isGroup, sender, senderNumber, botNumber });
                 } catch (e) {
                     console.error("[PLUGIN ERROR] " + e);
                 }
@@ -137,7 +111,6 @@ async function connectToWA() {
         }
     });
 }
-
 app.get("/", (req, res) => {
     res.send("Octa 🧚🏻");
 });
@@ -145,4 +118,4 @@ app.listen(port, () => console.log(`Server listening on port http://localhost:${
 setTimeout(() => {
     connectToWA();
 }, 4000);
-                    
+                
